@@ -115,6 +115,7 @@ class EffectsManager():
                 self.counter = 0
         else:
             self.counter = 0
+            self.repeat_effect_on = False
 
         if self.snake.head.distance(self.food) < 15:  # main.py would not detect a collision with food for blue
             self.effect_on = False
