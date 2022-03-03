@@ -1,0 +1,31 @@
+Jogadores são zumbis tentando comer o máximo de brains possível, sem levar 3 tiros.
+
+Há um copo com 13 dados. 
+Cada dado tem uma combinação de brains, footstepse tiros em suas faces.
+- DADOS AMARELOS: 2 footsteps, 2 brains, 2 shotguns
+- DADOS VERDES: 2 footsteps, 3 brains, 1 shotgun
+- DADOS VERMELHOS: 2 footsteps, 1 brain, 3 shotguns
+
+
+O jogador aleatoriamente retira 3 dados do copo e os joga. Conta o número de shotguns e brains.
+-  Se acumular 3 shotguns, perde automaticamente, com 0 pontos para sua vez.
+- Enquanto tiver acumulado menos de 3 shotguns, pode jogar eternamente.
+- Se decidir continuar jogando, deve jogar todos os dados que caíram com footsteps. Sempre em número de 3, tirando mais dados do copo se for preciso.
+Pode ir jogando até acumular 3 shotguns (perdendo tudo) ou os 13 dados haverem acabado.
+- Quando alguém chegar ao número de 13 cérebros, sai da rodada e o resto dos jogadores precisam terminar ela. O resto dos jogadores fazem mais uma rodada.
+Se mais ninguém fizer 13 pontos, o jogador que completou 13 pontos ganha.
+Se alguém fizer 13 pontos, vai para mais uma rodada com o outro jogador que completou 13 primeiro.
+
+
+
+A bot that, after the first roll, randomly decides if it will continue or stop
+A bot that stops rolling after it has rolled two brains
+A bot that stops rolling after it has rolled two shotguns
+A bot that initially decides it’ll roll the dice one to four times, but will stop early if it rolls two shotguns
+A bot that stops rolling after it has rolled more shotguns than brains
+
+Zack
+Zed
+Zulu
+Ziggy
+Zoe
