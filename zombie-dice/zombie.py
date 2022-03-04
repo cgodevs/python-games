@@ -7,15 +7,15 @@ ZOMBIES = ["Zack", "Zed", "Ziggy", "Zoe", "Zulu"]
 class Zombie:
     def __init__(self, is_player=False):
         self.name = ""
-        self.turn_brains = 0
-        self.turn_shotguns = 0
-        self.lost_turn = False
-        self.turn_ended = False    # to be used by some examples of Zombie
         self.is_player = is_player
-        self.round_won_brains = 12
         if is_player:
             # TODO print(ascii_art.logo)
             self.name = input("What is your name? ")
+        self.turn_brains = 0
+        self.turn_shotguns = 0
+        self.round_won_brains = 11
+        self.lost_turn = False
+        self.turn_ended = False    # to be used by some examples of Zombie
 
     def turn(self, dice_outcome):
         """Adds the dice result to the zombie's internal counting of turn points"""
