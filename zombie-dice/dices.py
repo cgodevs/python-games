@@ -2,13 +2,9 @@ import click
 import zombie as z
 import random
 from time import sleep
-from prettytable import PrettyTable
 
-SLEEP = 1 #1.5
+SLEEP = 1.5  # 1.5
 
-"""
-ALL ZOMBIES --> SCOREBOARD --> DICE (ascending order of information received)
-"""
 
 class ScoreBoard:  # to be used by DiceCup
     def __init__(self, player: z.Zombie):
@@ -24,27 +20,27 @@ class ScoreBoard:  # to be used by DiceCup
         next_player = self.zombies[self.whose_turn]
         return next_player
 
-    def check_for_winner(self):
+    def game_win(self):
         if len(self.winners) == 1:
-            if not self.last_round:
-                print(f"{self.winners[0].name} won the game!! YEEEEEAAAAAH brainscjkaweiolfqvj")
-                return True
-            else:
-                print(f"{self.winners[0].name} got to 13 brains!! We're moving to the last round now. ")
-                self.last_round = True
+            if self.last_round:
+                del self.zombies[self.whose_turn]
+                self.last_round = False
                 return False
+            else:   # meaning there's already been the last
+                print(f"{self.winners[0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
+                return True
         elif len(self.winners) == 2:
             if self.last_round:
-                scores = [winner.collected_brains for winner in self.winners]
+                scores = [winner.round_won_brains for winner in self.winners]
                 winner_index = self.winners.index(max(scores))
                 winner = self.winners[winner_index]
-                print(f"{winner.name} won the game with a set of "
-                      f"{winner.collected_brains} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
+                print(f"\n {winner.name} won the game with a set of "
+                      f"{winner.round_won_brains} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
                 return True
             else:
                 if self.player in self.winners:
-                    p1_score = self.winners[0].collected_brains
-                    p2_score = self.winners[1].collected_brains
+                    p1_score = self.winners[0].round_won_brains
+                    p2_score = self.winners[1].round_won_brains
 
                     if p1_score == p2_score:
                         self.last_round = True
@@ -52,11 +48,10 @@ class ScoreBoard:  # to be used by DiceCup
                         return False
                     elif p1_score >= p2_score:
                         print(f"{self.winners[0].name} won the game with a set of "
-                              f"{self.winners[0].collected_brains} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
+                              f"{p1_score} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
                     else:
                         print(f"{self.winners[1].name} won the game with a set of "
-                              f"{self.winners[0].collected_brains} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
-                    self.last_round = True
+                              f"{p2_score} brains! YEEEEEAAAAAH brainscjkaweiolfqvj")
                     return True
                 else:
                     print("Other zombies ate your brain too! Sorry you lost.")
@@ -65,14 +60,16 @@ class ScoreBoard:  # to be used by DiceCup
             return False
 
     def display_table(self):
-        current_zombie_playing_name = self.zombies[self.whose_turn].name
         if self.table == [] or len(self.table) < self.whose_turn:
-            self.table.append(f"{current_zombie_playing_name}: ")
-
+            self.table.append(f"{self.zombies[self.whose_turn].name}: ")
         click.clear()
         print("\n".join(self.table))
 
-    def update_player_row(self, new_row):
+    def update_player_row(self, new_row="total brains"):
+        if new_row == "total brains":
+            zombie = self.zombies[self.whose_turn]
+            new_row = f"{zombie.name}: {zombie.round_won_brains}" \
+                      f" brain{'s' * bool(zombie.round_won_brains)}"
         try:
             self.table[self.whose_turn] = new_row
         except IndexError:
@@ -87,7 +84,6 @@ class DiceCup():
         }
         self.dice_left = ["yellow"] * 5 + ["red"] * 4 + ["green"] * 4
         self.result = []    # [["yellow", "brain"], ["red", "shotgun"], ["green", "brain"]]
-        self.faces_at_display = "\nDice: "
 
     def roll_out_3(self, consider_footsteps=None):   # picks out (actually removes) 3 dice from cup
         random.shuffle(self.dice_left)
@@ -102,47 +98,48 @@ class DiceCup():
     def reset_cup(self):
         self.dice_left = ["yellow"] * 5 + ["red"] * 4 + ["green"] * 4
         self.result = []
-        self.faces_at_display = "\nDice: "
 
     def display_faces(self, board: ScoreBoard):
-        def suspense(time=SLEEP):
-            sleep(time)
-            board.display_table()
+        faces_at_display = "\nDice: "
 
-        def show_die_face(new_face):
+        def add_face_to_die_result(new_face):
+            """Prints current table from the scoreboard, along with a new die face.
+            The reason for delay is to five the user time to see the result."""
+            nonlocal faces_at_display
             board.display_table()
-            print(self.faces_at_display, end="")
+            print(faces_at_display, end="")
             sleep(SLEEP)
             print(new_face)
-            self.faces_at_display += new_face
+            faces_at_display += new_face
 
-        zombie_player = board.zombies[board.whose_turn]
+        zombie = board.zombies[board.whose_turn]
         brains = len([die[1] for die in self.result if die[1] == "brain"])
         footsteps = len([die[1] for die in self.result if die[1] == "footstep"])
         shots = len([die[1] for die in self.result if die[1] == "shotgun"])
 
-        if brains > 0:
-            show_die_face(f"{brains} BRAINS")
+        if brains > 0:      # the things with bool() is to decide on whether or not to make the word plural
+            add_face_to_die_result(f"{brains} BRAIN{'S' * bool(brains-1)}")
         if footsteps > 0:
             if brains:
-                self.faces_at_display += ", "
-            show_die_face(f"{footsteps} FOOTSTEPS...")
+                faces_at_display += ", "
+            add_face_to_die_result(f"{footsteps} FOOTSTEP{'S' * bool(footsteps-1)}...")
         if shots > 0:
             if footsteps or brains:
-                self.faces_at_display += ", "
-            show_die_face(f"{shots} SHOTGUNS!!")
-            if shots >= 3:
-                show_die_face(" ----> TURN LOST!")
-                board.update_player_row(f"{zombie_player.name}: {zombie_player.collected_brains} brain{'s'*bool(shots)}")
-                suspense()
+                faces_at_display += ", "
+            add_face_to_die_result(f"{shots} SHOTGUN{'S' * bool(shots-1)}!!")
+            if zombie.turn_shotguns >= 3:
+                add_face_to_die_result(" ----> TURN LOST!")
+                board.update_player_row("total brains")
+                sleep(SLEEP)
+                board.display_table()
                 return
 
-        board.update_player_row(f"{zombie_player.name}: {zombie_player.collected_brains + brains} "
-                                f"brain{'s'*bool(zombie_player.collected_brains + brains)}, "   # to place letter "s" 
-                                        f"{zombie_player.collected_shotguns + shots} "
-                                f"shotgun{'s'*bool(zombie_player.collected_shotguns + shots)}")
-        suspense(1.5)
-        self.faces_at_display = "\nDice: "
+        board.update_player_row(f"{zombie.name}: {zombie.round_won_brains + zombie.turn_brains} "
+                                f"brain{'s' * bool(zombie.round_won_brains + brains - 1)}, "   
+                                        f"{zombie.turn_shotguns} shotgun{'s' * bool(zombie.turn_shotguns - 1)}")
+        sleep(2)
+        board.display_table()
+
 
 # p = z.Zombie(is_player=True)
 # sb = ScoreBoard(p)

@@ -5,65 +5,64 @@ player = Zombie(is_player=True)
 dice = DiceCup()
 scoreboard = ScoreBoard(player)
 
-last_round = False
 print("Player goes first, you are rolling the dice now!\n")
-
-
-# One round
-while True: # TODO não estou conseguindo acumular brains, mesmo passando a vez
+while True:  # Loop for the round
 
     zombie_playing = scoreboard.next_player()
     footsteps = []
+    scoreboard.update_player_row("total brains")
 
-    is_valid_turn = not zombie_playing.turn_ended and not zombie_playing.lost_turn and \
-                    len(dice.dice_left) + len(footsteps) >= 3   # all dice available must be enough to roll 3
-
-    while is_valid_turn:
-        # ------------ Roll the Dice------------ #
+    while not zombie_playing.turn_ended and not zombie_playing.lost_turn and \
+                    len(dice.dice_left) + len(footsteps) >= 3:    # Loop for one player's turn
+        # --------------- Roll the Dice--------------- #
         if footsteps:
             dice.roll_out_3(consider_footsteps=footsteps)
-            footsteps = []
         else:
             dice.roll_out_3()
-        dice.display_faces(scoreboard)
         zombie_playing.turn(dice.result)
+        dice.display_faces(scoreboard)
 
-        # ----------- Check for Dice OutCome -------------- #
-        if zombie_playing.turn_ended:
-            scoreboard.display_table()
+        # --------------- Check for Loss ----------------- #
         if zombie_playing.lost_turn:
-            zombie_playing.reset_turn(dice.result)
-            scoreboard.display_table()
+            zombie_playing.reset_turn()
+            break
+        if zombie_playing.turn_ended or zombie_playing.lost_turn:
+        #     # scoreboard.update_player_row("total brains")
+        #     scoreboard.display_table()
+        #     sleep(2)
             break
         else:
-            for die in dice.result:     # collect footsteps, so the zombie can reuse the die by its color
-                if die[1] == "footstep":
-                    footsteps.append(die[0])
+            footsteps = [die[0] for die in dice.result if die[1] == "footstep"]  # collect footsteps to reuse the die by its color
 
-            # ------------------- Player plays ------------------- #
-            #if zombie_playing.turn_ended:
-                #scoreboard.display_table()     # to be used by some zombies
-            if zombie_playing.is_player and not zombie_playing.turn_ended:
-                choice = input("Would you like to roll again? Y or N ").upper()
-                if choice == "N":
-                    zombie_playing.end_turn_by_choice()
-                    scoreboard.display_table()
-                    break
-
-            # -------------------- Check for Win ------------------ #
-            if zombie_playing.collected_brains >= 13:
+        # -------------------- Check for Win ------------------ #
+            total_brains = zombie_playing.round_won_brains + zombie_playing.turn_brains
+            if total_brains >= 13:
                 scoreboard.last_round = True
                 scoreboard.winners.append(zombie_playing)
-                print(f"{zombie_playing.name} achieved {zombie_playing.collected_brains},"
+                print(f"\n{zombie_playing.name} got to {total_brains} brains,"
                       f" we're moving to the last round!")
+                sleep(2)
                 break
 
+        # ------------------- Player plays ------------------- #
+            if zombie_playing.is_player:
+                choice = input("\nWould you like to roll again? Y or N ").upper()
+                if choice == "N":
+                    scoreboard.display_table()
+                    break
+                else:
+                    continue
+
+    # After player's turn's ended
+    zombie_playing.round_won_brains += zombie_playing.turn_brains
+    zombie_playing.end_turn_by_choice()
+    sleep(2)
+    scoreboard.update_player_row("total brains")
+    scoreboard.display_table()
     zombie_playing.lost_turn = False
     zombie_playing.turn_ended = False
-    # if zombie_playing == scoreboard.zombies[-1]:
-        # scoreboard.table = []
-    end = scoreboard.check_for_winner()
-    if end or scoreboard.last_round:
+    if scoreboard.game_win():
+        sleep(3)
         break
 
 
