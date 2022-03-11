@@ -12,7 +12,6 @@ while game_on:  # Game round
 
     zombie_playing = scoreboard.next_player()
     footsteps = []
-    scoreboard.update_player_stats("total brains")
 
     while zombie_playing.turn_is_on() and dice.enough_dice_left(footsteps):    # One player's turn
 
@@ -37,19 +36,16 @@ while game_on:  # Game round
 
         # ------------------- Player plays ------------------- #
             if zombie_playing.is_player:
-                choice = input("\nWould you like to roll again? Y or N ").upper()
-                if choice == "N":
-                    scoreboard.display_table()
+                play_again = input("\nWould you like to roll again? Y or N ").upper()
+                if play_again == "N":
                     break
-                else:
-                    continue
-        if zombie_playing.turn_ended:
-            break
+            if zombie_playing.turn_ended:
+                break
 
     # -------------- Update Zombie's and game's conditions after its turn ended --------------- #
     zombie_playing.round_won_brains += zombie_playing.turn_brains
-    scoreboard.update_player_stats("total brains")
-    scoreboard.display_table()
+    scoreboard.set_player_round_stats()
+    scoreboard.display_current_stats()
     sleep(1)
     click.clear()
     zombie_playing.reset_turn_stats(by_choice=True)

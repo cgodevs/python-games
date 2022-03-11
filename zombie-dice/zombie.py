@@ -13,7 +13,7 @@ class Zombie:
             self.name = input("What is your name? ")
         self.turn_brains = 0
         self.turn_shotguns = 0
-        self.round_won_brains = 0
+        self.round_won_brains = 0   # set back to 0 to quit debug mode
         self.lost_turn = False
         self.turn_ended = False    # to be used by some examples of Zombie
 
@@ -45,12 +45,19 @@ class Zombie:
             self.turn_ended = False
 
     def turn_is_on(self):
+        """True if a zombie's round is neither lost nor ended by choice"""
         if not self.turn_ended and not self.lost_turn:
             return True
         return False
 
     def total_turn_brains(self):
+        """Number of brains achieved in one turn plus the last amount accumulated"""
         return self.round_won_brains + self.turn_brains
+
+    def get_round_stats(self):
+        """Just the string with the actual number of brains guaranteed so far for all previous rounds"""
+        return f"{self.name}: {self.round_won_brains} brain{'s' * bool(self.round_won_brains - 1)}"
+
 
 # STATIC
 def create_zombie():

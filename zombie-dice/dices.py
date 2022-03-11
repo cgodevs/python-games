@@ -13,31 +13,28 @@ class ScoreBoard:  # to be used by DiceCup
         self.whose_turn = -1  # player goes first, the next_player method will add 1 to it before its turn
         self.last_round = False
         self.winners = []   # list of [zombie object, its turn]
-        self.table = []
+        self.stats = [zombie.get_round_stats()
+                      for zombie in self.zombies]    # keeps track of zombie's stats, as many items as there are zombies
 
     def next_player(self):
+        """Returns the next zombie object in the list of inner zombies making up the scoreboard"""
         self.whose_turn = (self.whose_turn + 1) % len(self.zombies)
         next_player = self.zombies[self.whose_turn]
         return next_player
 
-    def display_table(self):
-        if self.table == [] or len(self.table) < self.whose_turn:
-            self.table.append(f"{self.zombies[self.whose_turn].name}: ")
+    def display_current_stats(self):
+        """CLeans screen and displays inner set of all zombie's stats"""
         click.clear()
-        print("\n".join(self.table))
+        print("\n".join(self.stats))
 
-    def update_player_stats(self, new_row="total brains"):
-        if new_row == "total brains":
-            if self.winners:
-                zombie = self.zombies[-1]
-            else:
-                zombie = self.zombies[self.whose_turn]
-            new_row = f"{zombie.name}: {zombie.round_won_brains}" \
-                      f" brain{'s' * bool(zombie.round_won_brains - 1)}"
-        try:
-            self.table[self.whose_turn] = new_row
-        except IndexError:
-            self.table.append(new_row)
+    def set_player_round_stats(self):
+        """Modify a player's stats with the full amount of guaranteed brains achieved"""
+        zombie_playing = self.zombies[self.whose_turn]
+        self.stats[self.whose_turn] = zombie_playing.get_round_stats()
+
+    def set_player_turn_stats(self, msg: str):
+        """Modify a player's stats for the message in the argument"""
+        self.stats[self.whose_turn] = msg
 
 
 class DiceCup:
@@ -50,7 +47,8 @@ class DiceCup:
         self.dice_left = ["yellow"] * 5 + ["red"] * 4 + ["green"] * 4
         self.result = []    # [["yellow", "brain"], ["red", "shotgun"], ["green", "brain"]]
 
-    def roll_out_3(self, considered_footsteps):   # picks out (actually removes) 3 dice from cup
+    def roll_out_3(self, considered_footsteps):
+        """Picks out (actually removes) 3 dice from cup"""
         random.shuffle(self.dice_left)
         if considered_footsteps:
             colors = considered_footsteps + [self.dice_left.pop()] * (3 - len(considered_footsteps))
@@ -68,13 +66,15 @@ class DiceCup:
         return len(self.dice_left) + len(turn_footsteps) >= 3
 
     def display_faces(self, board: ScoreBoard):
+        """Repeatedly displays the scoreboard stats, along with a new face for the dice result.
+        Time between each display of a die face means to add suspense and simulate a die roll a little better"""
         faces_at_display = "\nDice: "
 
         def add_face_to_die_result(new_face):
             """Prints current table from the scoreboard, along with a new die face.
             The reason for delay is to five the user time to see the result."""
             nonlocal faces_at_display
-            board.display_table()
+            board.display_current_stats()
             print(faces_at_display, end="")
             sleep(SLEEP)
             print(new_face)
@@ -85,7 +85,7 @@ class DiceCup:
         footsteps = len([die[1] for die in self.result if die[1] == "footstep"])
         shots = len([die[1] for die in self.result if die[1] == "shotgun"])
 
-        if brains > 0:      # the things with bool() is to decide on whether or not to make the word plural
+        if brains > 0:      # the thing with bool() is to decide on whether or not to make the word plural
             add_face_to_die_result(f"{brains} BRAIN{'S' * bool(brains-1)}")
         if footsteps > 0:
             if brains:
@@ -97,14 +97,14 @@ class DiceCup:
             add_face_to_die_result(f"{shots} SHOTGUN{'S' * bool(shots-1)}!!")
             if zombie.turn_shotguns >= 3:
                 add_face_to_die_result(" ----> TURN LOST!")
-                board.update_player_stats("total brains")
-                sleep(SLEEP)
-                board.display_table()
+                board.set_player_round_stats()
+                sleep(2)
                 return
 
-        board.update_player_stats(f"{zombie.name}: {zombie.round_won_brains + zombie.turn_brains} "
-                                f"brain{'s' * bool(zombie.round_won_brains + brains - 1)}, "   
-                                        f"{zombie.turn_shotguns} shotgun{'s' * bool(zombie.turn_shotguns - 1)}")
+        board.set_player_turn_stats(f"{zombie.name}: {zombie.round_won_brains + zombie.turn_brains} brain"
+                                    f"{'s' * bool(zombie.round_won_brains + brains - 1)}, "   
+                                    f"{zombie.turn_shotguns} shotgun"
+                                    f"{'s' * bool(zombie.turn_shotguns - 1)}")
         sleep(2)
-        board.display_table()
+        board.display_current_stats()
 
