@@ -20,43 +20,13 @@ class ScoreBoard:  # to be used by DiceCup
         next_player = self.zombies[self.whose_turn]
         return next_player
 
-    def game_ends(self):
-        if len(self.winners) > 0:   # are there any winners so far?
-            if self.whose_turn == self.winners[0][1] - 1:  # if the round was completed
-                if len(self.winners) == 1:
-                    print(f"{self.winners[0][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                    return True
-                elif len(self.winners) == 2:
-                    score1 = self.winners[0][0].round_won_brains
-                    score2 = self.winners[1][0].round_won_brains
-                    if score1 > score2:
-                        print(f"{self.winners[0][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                    elif score1 < score2:
-                        print(f"{self.winners[1][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                    else:   # If there was a draw, consider a last turn only if the player is one of the winners
-                        if self.winners[0][0].is_player or self.winners[1][0].is_player:
-                            self.zombies = [winner[0] for winner in self.winners]
-                            self.whose_turn = 0
-                            self.last_round = True
-                            return False
-                        else:
-                            print("There was a draw. Game Over.")
-                    return True
-        else:
-            return False
-        # if self.last_round:
-        #     self.whose_turn -= 1  # não entendi essa
-        #     # self.last_round = False
-        #     return False
-
-
     def display_table(self):
         if self.table == [] or len(self.table) < self.whose_turn:
             self.table.append(f"{self.zombies[self.whose_turn].name}: ")
         click.clear()
         print("\n".join(self.table))
 
-    def update_player_row(self, new_row="total brains"):
+    def update_player_stats(self, new_row="total brains"):
         if new_row == "total brains":
             if self.winners:
                 zombie = self.zombies[-1]
@@ -69,16 +39,6 @@ class ScoreBoard:  # to be used by DiceCup
         except IndexError:
             self.table.append(new_row)
 
-    def move_zombie_to_winners(self, zombie: z.Zombie):
-        self.winners.append([zombie, self.whose_turn])
-        del self.table[self.whose_turn]
-        del self.zombies[self.whose_turn]  # winner doesn't take place in the next round
-        self.whose_turn -= 2    # next player will take on the winner zombie's position, and next zombie will have the turn set higher on its turn
-        if self.last_round:
-            return
-        print(f"\n{zombie.name} got to {zombie.round_won_brains + zombie.turn_brains} brains,"
-              f" we're moving to the last round!")
-
 
 class DiceCup:
     def __init__(self):
@@ -90,10 +50,10 @@ class DiceCup:
         self.dice_left = ["yellow"] * 5 + ["red"] * 4 + ["green"] * 4
         self.result = []    # [["yellow", "brain"], ["red", "shotgun"], ["green", "brain"]]
 
-    def roll_out_3(self, consider_footsteps=None):   # picks out (actually removes) 3 dice from cup
+    def roll_out_3(self, considered_footsteps):   # picks out (actually removes) 3 dice from cup
         random.shuffle(self.dice_left)
-        if consider_footsteps:
-            colors = consider_footsteps + [self.dice_left.pop()] * (3 - len(consider_footsteps))
+        if considered_footsteps:
+            colors = considered_footsteps + [self.dice_left.pop()] * (3 - len(considered_footsteps))
         else:
             colors = [self.dice_left.pop(), self.dice_left.pop(), self.dice_left.pop()]
         three_faces = [random.choice(self.faces[color]) for color in colors]
@@ -103,6 +63,9 @@ class DiceCup:
     def reset_cup(self):
         self.dice_left = ["yellow"] * 5 + ["red"] * 4 + ["green"] * 4
         self.result = []
+
+    def enough_dice_left(self, turn_footsteps):
+        return len(self.dice_left) + len(turn_footsteps) >= 3
 
     def display_faces(self, board: ScoreBoard):
         faces_at_display = "\nDice: "
@@ -134,12 +97,12 @@ class DiceCup:
             add_face_to_die_result(f"{shots} SHOTGUN{'S' * bool(shots-1)}!!")
             if zombie.turn_shotguns >= 3:
                 add_face_to_die_result(" ----> TURN LOST!")
-                board.update_player_row("total brains")
+                board.update_player_stats("total brains")
                 sleep(SLEEP)
                 board.display_table()
                 return
 
-        board.update_player_row(f"{zombie.name}: {zombie.round_won_brains + zombie.turn_brains} "
+        board.update_player_stats(f"{zombie.name}: {zombie.round_won_brains + zombie.turn_brains} "
                                 f"brain{'s' * bool(zombie.round_won_brains + brains - 1)}, "   
                                         f"{zombie.turn_shotguns} shotgun{'s' * bool(zombie.turn_shotguns - 1)}")
         sleep(2)

@@ -9,11 +9,11 @@ class Zombie:
         self.name = ""
         self.is_player = is_player
         if is_player:
-            # TODO print(ascii_art.logo)
+            print(ascii_art.logo)
             self.name = input("What is your name? ")
         self.turn_brains = 0
         self.turn_shotguns = 0
-        self.round_won_brains = 11  # set back to 0 to exit debug mode
+        self.round_won_brains = 0
         self.lost_turn = False
         self.turn_ended = False    # to be used by some examples of Zombie
 
@@ -32,24 +32,29 @@ class Zombie:
             if not self.is_player:
                 self.turn_ended = True   # placeholder, take away depending on the zombie's characteristics
 
-    def reset_turn(self):
-        if self.is_player:
-            print(f"\nYou lost your turn by accumulating {self.turn_shotguns} shotguns.")
+    def reset_turn_stats(self, by_choice=False):
+        """Resets the zombie's counting of relevant points, so it may start a next
+        round with refreshed points or loose its points in case it collected 3 or more shots"""
+        self.turn_ended = True
+        self.turn_shotguns = 0
+        self.turn_brains = 0
+        if not by_choice:
+            print(f"\n{self.name} lost its turn by accumulating {self.turn_shotguns} shots.")
         else:
-            print(f"\nZombie {self.name} lost its turn.")
-        self.turn_ended = True
-        self.turn_shotguns = 0
-        self.turn_brains = 0
-        # self.turn_footsteps = 0
+            self.lost_turn = False
+            self.turn_ended = False
 
-    def end_turn_by_choice(self):
-        self.turn_ended = True
-        self.turn_shotguns = 0
-        self.turn_brains = 0
+    def turn_is_on(self):
+        if not self.turn_ended and not self.lost_turn:
+            return True
+        return False
 
+    def total_turn_brains(self):
+        return self.round_won_brains + self.turn_brains
 
 # STATIC
 def create_zombie():
+    """Returns a zombie object"""
     new_zombie = Zombie()
     random.shuffle(ZOMBIES)
     new_zombie.name = ZOMBIES.pop()
@@ -57,6 +62,7 @@ def create_zombie():
 
 
 def set_number_of_zombies():
+    """Returns a set of zombies. To be used by a Scoreboard."""
     try:
         number_of_zombies = int(input("How many zombies do you wanna play against? (Up to 5) "))
         if number_of_zombies < 0 or number_of_zombies > 5:
