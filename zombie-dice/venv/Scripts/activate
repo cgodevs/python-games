@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\caroline.oliveira\OneDrive - ZUP IT SOLUCOES EM INFORMATICA LTDA\Área de Trabalho\Carol\archived\python-games\zombie-dice\venv"
+VIRTUAL_ENV="C:\Users\caroline.oliveira\PycharmProjects\python-games\zombie-dice\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

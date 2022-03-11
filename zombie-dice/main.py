@@ -6,7 +6,7 @@ dice = DiceCup()
 scoreboard = ScoreBoard(player)
 
 print("Player goes first, you are rolling the dice now!\n")
-while not scoreboard.game_over:  # Loop for the round
+while True:  # Loop for the round  # TODO depois que alguém chega a 13 brains, mt coisa tá zuada, repete nome e não faz a última rodada
 
     zombie_playing = scoreboard.next_player()
     footsteps = []
@@ -32,13 +32,10 @@ while not scoreboard.game_over:  # Loop for the round
         # -------------------- Check for Win ------------------ #
             total_brains = zombie_playing.round_won_brains + zombie_playing.turn_brains
             if total_brains >= 13:
-                scoreboard.winners.append([zombie_playing, scoreboard.whose_turn])
+                scoreboard.move_zombie_to_winners(zombie_playing)
                 if scoreboard.last_round:
                     break
                 scoreboard.last_round = True
-                del scoreboard.zombies[scoreboard.whose_turn]   # winner doesn't take place in the next round
-                print(f"\n{zombie_playing.name} got to {total_brains} brains,"
-                      f" we're moving to the last round!")
                 sleep(2)
                 break
 
@@ -53,16 +50,21 @@ while not scoreboard.game_over:  # Loop for the round
         if zombie_playing.turn_ended:
             break
 
-    # After player's turn's ended
+    # -------------- Check for Game Win --------------- #
     zombie_playing.round_won_brains += zombie_playing.turn_brains
-    zombie_playing.end_turn_by_choice()
-    sleep(2)
     scoreboard.update_player_row("total brains")
     scoreboard.display_table()
-    zombie_playing.lost_turn = False
-    zombie_playing.turn_ended = False
     if scoreboard.game_ends():
         sleep(3)
         break
+
+    # After player's turn's ended, set conditions for next player
+    zombie_playing.end_turn_by_choice()
+    sleep(2)
+    zombie_playing.lost_turn = False
+    zombie_playing.turn_ended = False
+    # if scoreboard.game_ends():
+    #     sleep(3)
+    #     break
 
     dice.reset_cup()

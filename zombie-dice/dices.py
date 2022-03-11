@@ -14,7 +14,6 @@ class ScoreBoard:  # to be used by DiceCup
         self.last_round = False
         self.winners = []   # list of [zombie object, its turn]
         self.table = []
-        self.game_over = False
 
     def next_player(self):
         self.whose_turn = (self.whose_turn + 1) % len(self.zombies)
@@ -22,32 +21,34 @@ class ScoreBoard:  # to be used by DiceCup
         return next_player
 
     def game_ends(self):
-        if self.last_round:
-            self.whose_turn -= 1
-            self.last_round = False
-            return False
-        elif self.whose_turn == self.winners[0][1] - 1:  # if the round was completed
-            if len(self.winners) == 1:
-                print(f"{self.winners[0][1]} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                return True
-            elif len(self.winners) == 2:
-                score1 = self.winners[0][0].round_won_brains
-                score2 = self.winners[1][0].round_won_brains
-                if score1 > score2:
+        if len(self.winners) > 0:   # are there any winners so far?
+            if self.whose_turn == self.winners[0][1] - 1:  # if the round was completed
+                if len(self.winners) == 1:
                     print(f"{self.winners[0][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                elif score1 < score2:
-                    print(f"{self.winners[1][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
-                else:   # If there was a draw, consider a last turn only if the player is one of the winners
-                    if self.winners[0][0].is_player or self.winners[1][0].is_player:
-                        self.zombies = [winner[0] for winner in self.winners]
-                        self.whose_turn = 0
-                        self.last_round = True
-                        return False
-                    else:
-                        print("There was a draw. Game Over.")
-                return True
+                    return True
+                elif len(self.winners) == 2:
+                    score1 = self.winners[0][0].round_won_brains
+                    score2 = self.winners[1][0].round_won_brains
+                    if score1 > score2:
+                        print(f"{self.winners[0][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
+                    elif score1 < score2:
+                        print(f"{self.winners[1][0].name} won the game!! YEEEEEAAAAAH brainssssscjkaweiolfqvj")
+                    else:   # If there was a draw, consider a last turn only if the player is one of the winners
+                        if self.winners[0][0].is_player or self.winners[1][0].is_player:
+                            self.zombies = [winner[0] for winner in self.winners]
+                            self.whose_turn = 0
+                            self.last_round = True
+                            return False
+                        else:
+                            print("There was a draw. Game Over.")
+                    return True
         else:
             return False
+        # if self.last_round:
+        #     self.whose_turn -= 1  # não entendi essa
+        #     # self.last_round = False
+        #     return False
+
 
     def display_table(self):
         if self.table == [] or len(self.table) < self.whose_turn:
@@ -57,7 +58,10 @@ class ScoreBoard:  # to be used by DiceCup
 
     def update_player_row(self, new_row="total brains"):
         if new_row == "total brains":
-            zombie = self.zombies[self.whose_turn]
+            if self.winners:
+                zombie = self.zombies[-1]
+            else:
+                zombie = self.zombies[self.whose_turn]
             new_row = f"{zombie.name}: {zombie.round_won_brains}" \
                       f" brain{'s' * bool(zombie.round_won_brains - 1)}"
         try:
@@ -65,8 +69,18 @@ class ScoreBoard:  # to be used by DiceCup
         except IndexError:
             self.table.append(new_row)
 
+    def move_zombie_to_winners(self, zombie: z.Zombie):
+        self.winners.append([zombie, self.whose_turn])
+        del self.table[self.whose_turn]
+        del self.zombies[self.whose_turn]  # winner doesn't take place in the next round
+        self.whose_turn -= 2    # next player will take on the winner zombie's position, and next zombie will have the turn set higher on its turn
+        if self.last_round:
+            return
+        print(f"\n{zombie.name} got to {zombie.round_won_brains + zombie.turn_brains} brains,"
+              f" we're moving to the last round!")
 
-class DiceCup():
+
+class DiceCup:
     def __init__(self):
         self.faces = {
             "yellow": ["footstep", "footstep", "brain", "brain", "shotgun", "shotgun"],
@@ -130,11 +144,4 @@ class DiceCup():
                                         f"{zombie.turn_shotguns} shotgun{'s' * bool(zombie.turn_shotguns - 1)}")
         sleep(2)
         board.display_table()
-
-
-# p = z.Zombie(is_player=True)
-# sb = ScoreBoard(p)
-# d = DiceCup(sb)
-# print(d.roll_out_3())
-
 

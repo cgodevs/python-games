@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\caroline.oliveira\OneDrive - ZUP IT SOLUCOES EM INFORMATICA LTDA\Área de Trabalho\Carol\archived\python-games\zombie-dice\venv
+set VIRTUAL_ENV=C:\Users\caroline.oliveira\PycharmProjects\python-games\zombie-dice\venv
 
 if not defined PROMPT set PROMPT=$P$G
 
