@@ -13,7 +13,7 @@ class Zombie:
             self.name = input("What is your name? ")
         self.turn_brains = 0
         self.turn_shotguns = 0
-        self.round_won_brains = 0   # set back to 0 to quit debug mode
+        self.round_won_brains = 12   # set back to 0 to quit debug mode
         self.lost_turn = False
         self.turn_ended = False    # to be used by some examples of Zombie
 

@@ -12,6 +12,7 @@ class ScoreBoard:  # to be used by DiceCup
         self.zombies = [player] + z.set_number_of_zombies()
         self.whose_turn = -1  # player goes first, the next_player method will add 1 to it before its turn
         self.last_round = False
+        self.last_round_turns = 0
         self.winners = []   # list of [zombie object, its turn]
         self.stats = [zombie.get_round_stats()
                       for zombie in self.zombies]    # keeps track of zombie's stats, as many items as there are zombies
@@ -35,6 +36,38 @@ class ScoreBoard:  # to be used by DiceCup
     def set_player_turn_stats(self, msg: str):
         """Modify a player's stats for the message in the argument"""
         self.stats[self.whose_turn] = msg
+
+    def move_zombie_to_winners(self, zombie: z.Zombie):
+        self.winners.append([zombie, self.whose_turn])
+        del self.zombies[self.whose_turn]  # winner doesn't take place in the next round
+        del self.stats[self.whose_turn]
+        self.whose_turn -= 1  # next player will take on the winner's current position
+        if len(self.winners) == 1:
+            print(f"\n{zombie.name} got to {zombie.round_won_brains + zombie.turn_brains} brains,"
+              f" we're moving to the last round!")
+            self.last_round = True
+        else:
+            print(f"\n{zombie.name} got to 13 brains too!! The two winners will play one last round alone.")
+        sleep(2)
+
+    def last_round_complete(self):
+        if self.last_round:
+            if len(self.winners) == 2:
+                return True
+            if self.last_round_turns == len(self.zombies):
+                return True
+            else:
+                self.last_round_turns += 1
+        return False
+
+    def get_reset_for_winners(self):
+        self.zombies = []
+        self.whose_turn = -1
+        for winner in self.winners:
+            winner[0].reset_turn_stats(by_choice=True)
+            winner[0].round_won_brains = 12
+            self.zombies.append(winner[0])
+        self.stats = [zombie.get_round_stats() for zombie in self.zombies]
 
 
 class DiceCup:
@@ -107,4 +140,5 @@ class DiceCup:
                                     f"{'s' * bool(zombie.turn_shotguns - 1)}")
         sleep(2)
         board.display_current_stats()
+
 
